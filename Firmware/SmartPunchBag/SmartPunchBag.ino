@@ -10,11 +10,9 @@
 #include <BLEBeacon.h>
 
 // Definitions (Constants)
-#define DEVICE_NAME            "SensAi Punch Bag"
-#define SERVICE_UUID           "7A0247E7-8E88-409B-A959-AB5092DDB03E"
-#define BEACON_UUID            "2D7A9F0C-E0E8-4CC9-A71B-A21DB2D034A1"
-#define BEACON_UUID_REV        "A134D0B2-1DA2-1BA7-C94C-E8E00C9F7A2D"
-#define CHARACTERISTIC_UUID    "82258BAA-DF72-47E8-99BC-B73D7ECD08A5"
+#define DEVICE_NAME           "SensAi Punch Bag"
+#define SERVICE_UUID          "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+#define CHARACTERISTIC_UUID   "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 
 // Variables
 UWORD Imagesize = LCD_1IN28_HEIGHT * LCD_1IN28_WIDTH * 2;
@@ -66,24 +64,22 @@ class MyCallbacks: public BLECharacteristicCallbacks {
 
 // Bluetooth initializations
 void init_service() {
-  BLEAdvertising* pAdvertising;
-  pAdvertising = pServer->getAdvertising();
+  BLEAdvertising *pAdvertising = pServer->getAdvertising();
   pAdvertising->stop();
 
   // Create the BLE Service
-  BLEService *pService = pServer->createService(BLEUUID(SERVICE_UUID));
+  BLEService *pService = pServer->createService(SERVICE_UUID);
 
   // Create a BLE Characteristic
   pCharacteristic = pService->createCharacteristic(
                       CHARACTERISTIC_UUID,
                       BLECharacteristic::PROPERTY_READ   |
-                      BLECharacteristic::PROPERTY_WRITE  |
-                      BLECharacteristic::PROPERTY_NOTIFY
+                      BLECharacteristic::PROPERTY_WRITE 
                     );
   pCharacteristic->setCallbacks(new MyCallbacks());
-  pCharacteristic->addDescriptor(new BLE2902());
+  //pCharacteristic->addDescriptor(new BLE2902());
 
-  pAdvertising->addServiceUUID(BLEUUID(SERVICE_UUID));
+  //pAdvertising->addServiceUUID(BLEUUID(SERVICE_UUID));
 
   // Start the service
   pService->start();
@@ -92,6 +88,7 @@ void init_service() {
 }
 
 // Bluetooth initializations
+/*
 void init_beacon() {
   BLEAdvertising* pAdvertising;
   pAdvertising = pServer->getAdvertising();
@@ -111,6 +108,7 @@ void init_beacon() {
 
   pAdvertising->start();
 }
+*/
 
 // Setup of program working
 void setup()
@@ -150,7 +148,7 @@ void setup()
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
   init_service();
-  init_beacon();
+  //init_beacon();
   
   // First image on display
   Paint_Clear(WHITE);
@@ -225,16 +223,17 @@ void loop()
     Paint_Clear(RED);
     Paint_DrawString_EN(70, 80, "Punch!", &Font24, WHITE, BLACK);
     Paint_DrawRectangle(20, 140, 220, 180, 0X0000, DOT_PIXEL_2X2, DRAW_FILL_EMPTY);
-    Paint_DrawString_EN(35, 150, "Force=", &Font20, WHITE, BLACK);
+    Paint_DrawString_EN(35, 150, "Acc=", &Font20, WHITE, BLACK);
     Paint_DrawNum(115, 150, fResult, &Font20, 2, BLACK, WHITE);
     LCD_1IN28_Display(BlackImage);
     // Send to Bluetooth
-    String sForce = "Force=";
+    String sAcc = "Acc=";
     char stringFloat[20];
     dtostrf(fResult, 6, 2, stringFloat);
-    sForce += String(stringFloat);
-    pCharacteristic->setValue(sForce.c_str());
-    pCharacteristic->notify();
+    sAcc += String(stringFloat);
+    pCharacteristic->setValue(sAcc.c_str());
+    //pCharacteristic->notify();
+    Serial.println(sAcc);
     value++;
 
     // Clean for next
