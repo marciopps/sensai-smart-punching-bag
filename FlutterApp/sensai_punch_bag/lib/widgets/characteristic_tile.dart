@@ -22,6 +22,8 @@ class CharacteristicTile extends StatefulWidget {
 
 class _CharacteristicTileState extends State<CharacteristicTile> {
   List<int> _value = [];
+  String currentData = "";
+  String previousData = "";
 
   late StreamSubscription<List<int>> _lastValueSubscription;
 
@@ -58,7 +60,14 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
   Future onReadPressed() async {
     try {
       await c.read();
-      Snackbar.show(ABC.c, "Read: Success", success: true);
+      if (currentData != previousData) {
+        Snackbar.show(
+          ABC.c,
+          "Punch!!!",
+          success: false,
+        );
+        previousData = currentData;
+      }
     } catch (e) {
       Snackbar.show(ABC.c, prettyException("Read Error:", e), success: false);
     }
@@ -105,30 +114,50 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
 
   Widget buildUuid(BuildContext context) {
     String uuid = '0x${widget.characteristic.uuid.str.toUpperCase()}';
-    return Text(uuid, style: TextStyle(fontSize: 13));
+    return Text(uuid, style: const TextStyle(fontSize: 13));
   }
 
   Widget buildValue(BuildContext context) {
     //String data = _value.toString();
-    String data = String.fromCharCodes(_value);
-    return Text(data, style: TextStyle(fontSize: 13, color: Colors.grey));
+    currentData = String.fromCharCodes(_value);
+
+    return Text(
+      currentData,
+      style: const TextStyle(fontSize: 32, color: Colors.red),
+      textAlign: TextAlign.center,
+    );
+  }
+
+  void _startPeriodicFunctionCall() {
+    const duration = Duration(seconds: 1); // Intervalo de 1 segundo
+
+    Timer timer = Timer.periodic(duration, (timer) {
+      // Chamar sua função aqui
+      onReadPressed();
+    });
+
+    // Opcional: para parar a interrupção periódica
+    // timer.cancel();
   }
 
   Widget buildReadButton(BuildContext context) {
     return TextButton(
-        child: Text("Read"),
-        onPressed: () async {
+      child: Text("Start"),
+      onPressed: _startPeriodicFunctionCall,
+
+      /*() async {
           await onReadPressed();
           if (mounted) {
             setState(() {});
           }
-        });
+        }*/
+    );
   }
 
   Widget buildWriteButton(BuildContext context) {
     bool withoutResp = widget.characteristic.properties.writeWithoutResponse;
     return TextButton(
-        child: Text(withoutResp ? "WriteNoResp" : "Write"),
+        child: Text(withoutResp ? "WriteNoResp" : "Send"),
         onPressed: () async {
           await onWritePressed();
           if (mounted) {
@@ -172,8 +201,10 @@ class _CharacteristicTileState extends State<CharacteristicTile> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            const Text('Characteristic'),
-            buildUuid(context),
+            const Text('',
+                style: TextStyle(fontSize: 32, color: Colors.red),
+                textAlign: TextAlign.center),
+            //buildUuid(context),
             buildValue(context),
           ],
         ),
